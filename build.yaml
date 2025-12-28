@@ -1,0 +1,16 @@
+builders:
+  l10n_key_resolver:
+    import: "package:l10n_key_resolver/builder.dart"
+    builder_factories: ["l10nKeyResolverBuilder"]
+    build_extensions:
+      "lib/l10n/app_en.arb":
+        - "lib/l10n/l10n_key_resolver.g.dart"
+    auto_apply: dependents
+    build_to: source
+    defaults:
+      options:
+        arb_file: "lib/l10n/app_en.arb"
+        output_file: "lib/l10n/l10n_key_resolver.g.dart"
+        localizations_class: "AppLocalizations"
+        localizations_import: "app_localizations.dart"
+        generate_dot_keys: true
