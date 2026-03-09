@@ -201,7 +201,7 @@ void main() {
       expect(code, contains("static const errorTimeout = 'errorTimeout';"));
     });
 
-    test('L10nKeys includes parameterized keys', () {
+    test('L10nKeys generates typed method for single-param entry', () {
       final entries = [
         const ArbEntry(
           arbKey: 'templateFieldsCount',
@@ -213,10 +213,87 @@ void main() {
 
       final code = generator.generate(entries);
 
+      // Should NOT generate a simple const for parameterized keys
+      expect(
+        code,
+        isNot(contains(
+          "static const templateFieldsCount = 'template.fields.count';",
+        )),
+      );
+
+      // Should generate a typed static method returning a record
       expect(
         code,
         contains(
-          "static const templateFieldsCount = 'template.fields.count';",
+          "static (String, Map<String, dynamic>) templateFieldsCount(int count) => ('template.fields.count', {'count': count});",
+        ),
+      );
+    });
+
+    test('L10nKeys generates typed method for multi-param entry', () {
+      final entries = [
+        const ArbEntry(
+          arbKey: 'retryAttempt',
+          dotKey: 'retry.attempt',
+          value: 'Attempt {attempt} using {strategy}',
+          placeholders: [
+            ArbPlaceholder(name: 'attempt', type: 'int'),
+            ArbPlaceholder(name: 'strategy', type: 'String'),
+          ],
+        ),
+      ];
+
+      final code = generator.generate(entries);
+
+      expect(
+        code,
+        contains(
+          "static (String, Map<String, dynamic>) retryAttempt(int attempt, String strategy) => ('retry.attempt', {'attempt': attempt, 'strategy': strategy});",
+        ),
+      );
+    });
+
+    test('L10nKeys keeps simple const for non-parameterized entries', () {
+      final entries = [
+        const ArbEntry(
+          arbKey: 'errorTimeout',
+          dotKey: 'error.timeout',
+          value: 'Timeout',
+        ),
+      ];
+
+      final code = generator.generate(entries);
+
+      expect(
+        code,
+        contains("static const errorTimeout = 'error.timeout';"),
+      );
+      // Should NOT contain a method signature for simple entries
+      expect(code, isNot(contains('static (String, Map<String, dynamic>) errorTimeout')));
+    });
+
+    test('L10nKeys mixes consts and typed methods correctly', () {
+      final entries = [
+        const ArbEntry(
+          arbKey: 'simpleKey',
+          dotKey: 'simple.key',
+          value: 'Simple',
+        ),
+        const ArbEntry(
+          arbKey: 'paramKey',
+          dotKey: 'param.key',
+          value: 'Hello {name}',
+          placeholders: [ArbPlaceholder(name: 'name', type: 'String')],
+        ),
+      ];
+
+      final code = generator.generate(entries);
+
+      expect(code, contains("static const simpleKey = 'simple.key';"));
+      expect(
+        code,
+        contains(
+          "static (String, Map<String, dynamic>) paramKey(String name) => ('param.key', {'name': name});",
         ),
       );
     });

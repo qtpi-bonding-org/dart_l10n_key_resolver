@@ -161,12 +161,26 @@ class ResolverGenerator {
     buffer.writeln('/// Usage:');
     buffer.writeln('/// ```dart');
     buffer.writeln("/// l10n.translate(L10nKeys.errorTimeout);");
+    buffer.writeln("/// l10n.translate(...L10nKeys.fieldsCount(5));");
     buffer.writeln('/// ```');
     buffer.writeln('abstract class L10nKeys {');
 
     for (final entry in entries) {
       final key = generateDotKeys ? entry.dotKey : entry.arbKey;
-      buffer.writeln("  static const ${entry.arbKey} = '$key';");
+      if (entry.hasParameters) {
+        // Generate typed static method returning (key, args) record
+        final params = entry.placeholders
+            .map((p) => '${p.dartType} ${p.name}')
+            .join(', ');
+        final argsMap = entry.placeholders
+            .map((p) => "'${p.name}': ${p.name}")
+            .join(', ');
+        buffer.writeln(
+          "  static (String, Map<String, dynamic>) ${entry.arbKey}($params) => ('$key', {$argsMap});",
+        );
+      } else {
+        buffer.writeln("  static const ${entry.arbKey} = '$key';");
+      }
     }
 
     buffer.writeln('}');
