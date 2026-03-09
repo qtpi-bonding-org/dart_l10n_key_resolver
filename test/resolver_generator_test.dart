@@ -154,6 +154,73 @@ void main() {
       expect(code, contains("args?['time'] as DateTime? ?? DateTime.now()"));
     });
 
+    test('generates L10nKeys class with constants', () {
+      final entries = [
+        const ArbEntry(
+          arbKey: 'errorTimeout',
+          dotKey: 'error.timeout',
+          value: 'Timeout',
+        ),
+        const ArbEntry(
+          arbKey: 'successGeneric',
+          dotKey: 'success.generic',
+          value: 'Success',
+        ),
+      ];
+
+      final code = generator.generate(entries);
+
+      expect(code, contains('abstract class L10nKeys {'));
+      expect(
+        code,
+        contains("static const errorTimeout = 'error.timeout';"),
+      );
+      expect(
+        code,
+        contains("static const successGeneric = 'success.generic';"),
+      );
+    });
+
+    test('L10nKeys uses arbKey when generateDotKeys is false', () {
+      final gen = ResolverGenerator(
+        localizationsClass: 'AppLocalizations',
+        localizationsImport: 'app_localizations.dart',
+        generateDotKeys: false,
+      );
+
+      final entries = [
+        const ArbEntry(
+          arbKey: 'errorTimeout',
+          dotKey: 'error.timeout',
+          value: 'Timeout',
+        ),
+      ];
+
+      final code = gen.generate(entries);
+
+      expect(code, contains("static const errorTimeout = 'errorTimeout';"));
+    });
+
+    test('L10nKeys includes parameterized keys', () {
+      final entries = [
+        const ArbEntry(
+          arbKey: 'templateFieldsCount',
+          dotKey: 'template.fields.count',
+          value: '{count} Fields',
+          placeholders: [ArbPlaceholder(name: 'count', type: 'int')],
+        ),
+      ];
+
+      final code = generator.generate(entries);
+
+      expect(
+        code,
+        contains(
+          "static const templateFieldsCount = 'template.fields.count';",
+        ),
+      );
+    });
+
     test('generates valid Dart code structure', () {
       final entries = [
         const ArbEntry(

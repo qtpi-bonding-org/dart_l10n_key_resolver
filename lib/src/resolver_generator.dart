@@ -48,6 +48,10 @@ class ResolverGenerator {
 
     // Close class
     buffer.writeln('}');
+    buffer.writeln();
+
+    // Generate keys constants class
+    _generateKeysClass(buffer, entries);
 
     return buffer.toString();
   }
@@ -149,5 +153,22 @@ class ResolverGenerator {
       }
       buffer.writeln('  };');
     }
+  }
+
+  void _generateKeysClass(StringBuffer buffer, List<ArbEntry> entries) {
+    buffer.writeln('/// Type-safe constants for all l10n keys.');
+    buffer.writeln('///');
+    buffer.writeln('/// Usage:');
+    buffer.writeln('/// ```dart');
+    buffer.writeln("/// l10n.translate(L10nKeys.errorTimeout);");
+    buffer.writeln('/// ```');
+    buffer.writeln('abstract class L10nKeys {');
+
+    for (final entry in entries) {
+      final key = generateDotKeys ? entry.dotKey : entry.arbKey;
+      buffer.writeln("  static const ${entry.arbKey} = '$key';");
+    }
+
+    buffer.writeln('}');
   }
 }
